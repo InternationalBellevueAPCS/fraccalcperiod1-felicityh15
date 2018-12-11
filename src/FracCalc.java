@@ -1,3 +1,4 @@
+import java.util.Arrays;
 import java.util.Scanner;
 public class FracCalc {
     /**
@@ -35,34 +36,140 @@ public class FracCalc {
     	String operator = cutInput.substring(0, 1); //finds operator    	
     	String secondFrac = cutInput.substring(2); //finds second fraction which starts after the operator and space
     	//Two arrays to store the whole number (index 0), numerator (index 1), and denominator (index 2) of the fractions 
+    	if ((firstFrac.equals("0") || secondFrac.equals("0")) && (operator.equals("*") || operator.equals("/"))) {
+    		return "0";
+    	}
     	int[] parse1stFrac = new int[3];
     	int[] parse2ndFrac = new int[3];
-    	parseFrac(firstFrac, parse1stFrac); 
+    	parseFrac(firstFrac, parse1stFrac);
     	parseFrac(secondFrac, parse2ndFrac);
-        return stringFracVals(parse2ndFrac);
+        return calculate(parse1stFrac, parse2ndFrac, operator);
     }    
-    public static void parseFrac(String frac, int[] parseFrac) { //parses fraction into 3 integer values and stores into array
-    	if(!frac.contains("_")) { //checks if the String fraction contains a whole number
+    /**
+     * parseFrac - parses fraction into 3 integer values and stores into array
+     * @param frac - String value of the fraction
+     * @param parseFrac - array of the fraction to store the integer values
+     */
+    public static void parseFrac(String frac, int[] parseFrac) { 
+    	if(!frac.contains("_")) { //if the String fraction does not contain a whole number
     		parseFrac[0] = 0; //no whole number
     	} else {
     		parseFrac[0] = Integer.parseInt(frac.substring(0, frac.indexOf("_"))); //sets index 0 of array fraction as the integer whole number
     	}	
-    	if(!frac.contains("/")&& !frac.contains("_")) { //checks if the fraction is a whole number
+    	if(!frac.contains("/")&& !frac.contains("_")) { //if the fraction is a whole number
     		parseFrac[0] = Integer.parseInt(frac);
     		parseFrac[1] = 0;
     		parseFrac[2] = 1;
-    	} else if (frac.contains("_") && frac.contains("/")){ //if the fraction is not just a whole number
+    	} else if (frac.contains("_") && frac.contains("/")){ //if the fraction a whole number and fraction
     		parseFrac[1] = Integer.parseInt(frac.substring(frac.indexOf("_")+1, frac.indexOf("/"))); //sets index 1 of array as numerator by checking between the "_" and "/" symbols
     		parseFrac[2] = Integer.parseInt(frac.substring(frac.indexOf("/")+1)); //sets index 2 of array fraction as the denominator
-    	} else {
+    		improperFrac(parseFrac);
+    	} else { //if the fraction has no whole number
     		parseFrac[1] = Integer.parseInt(frac.substring(0, frac.indexOf("/"))); //sets index 1 of array as numerator by checking before the "/" symbol
     		parseFrac[2] = Integer.parseInt(frac.substring(frac.indexOf("/")+1)); //sets index 2 of array fraction as the denominator
     	} 
+    	System.out.println(Arrays.toString(parseFrac)); //used to check where the code went wrong
     }
-    public static String stringFracVals(int[] frac) { //returns a string containing the whole, numerator, and denominator of a fraction
-    	return "whole:" + frac[0] + " numerator:" + frac[1] + " denominator:" + frac[2]; //prints out the whole, numerator, and denominator values of a fraction
+    /**
+     * returnStringAnswer - returns the fraction answer as a String
+     * @param answer - answer array containing the fraction answer
+     * @return - a String of the fraction answer
+     */
+    public static String returnStringAnswer(int[] answer) { 
+    	if(answer[0] !=0) {
+    		return "" + answer[0];  
+    	} else {
+    		return answer[1] + "/" + answer[2];
+    	}
     }
-    // TODO: Fill in the space below with helper methods
+    /** 
+     * improperFrac - converts a mixed fraction into an improper fraction
+     * @param frac - array of the fraction
+     */
+    public static void improperFrac(int[] frac) {
+    	if(frac[0] < 0) { //if the fraction is negative
+    		frac[1] = frac[0]*frac[2] - frac[1]; //puts the whole number values into the numerator
+        	frac[0] = 0;
+    	} else { //if the fraction is positive
+    		frac[1] = frac[1] + frac[0]*frac[2]; //puts the whole number values into the numerator
+    		frac[0] = 0;
+    	}
+    }
+    /**
+     * calculate - Evaluates the user input and calculates the answer depending on the operator 
+     * @param frac1 - first fraction array
+     * @param frac2 - second fraction array
+     * @param operator - plus, minus, multiply, or divide
+     * @return a String of the fraction answer
+     */
+    public static String calculate(int[] frac1, int[] frac2, String operator) {
+    	int[] answer = new int[3]; //New array to store the final answer
+		if(operator.equals("+")) { 
+			plus(answer, frac1, frac2);
+    	} else if (operator.equals("-")) { 
+    		minus(answer, frac1, frac2);
+    	} else if (operator.equals("*")) { 
+    		multiply(answer, frac1, frac2);
+    	} else { //Divide
+    		divide(answer, frac1, frac2);
+    	}
+		return returnStringAnswer(answer);
+    }
+    public static void plus(int[] answer, int[] frac1, int[] frac2) { 
+    	if((frac1[2] == 1 && frac1[1] == 0) && (frac2[2]==1 && frac2[1] == 0)) { //if fractions are both whole numbers
+			answer[0] = frac1[0] + frac2[0]; //stores answer in answer array
+		} else { 
+			if(frac1[2] == frac2[2]) { //if the denominators of both fractions are the same
+				answer[2] = frac1[2];
+				answer[1] = frac1[1] + frac2[1];
+			} else { 
+				answer[2] = frac1[2] * frac2[2]; 
+				answer[1] = (frac1[1] * frac2[2]) + (frac2[1] * frac1[2]); 
+			}
+		}
+    }
+    public static void minus(int[] answer, int[] frac1, int[] frac2) {
+    	if((frac1[2] == 1 && frac1[1] == 0) && (frac2[2]==1 && frac2[1] == 0)) { //if fractions are both whole numbers
+			answer[0] = frac1[0] - frac2[0];
+		} else {
+			if(frac1[2] == frac2[2]) { //if the denominators of both fractions are the same
+				answer[2] = frac1[2];
+				answer[1] = frac1[1] - frac2[1];
+			} else { 
+				answer[2] = frac1[2] * frac2[2]; 
+				answer[1] = (frac1[1] * frac2[2]) - (frac2[1] * frac1[2]); 
+			}
+		}
+    }
+    public static void multiply(int[] answer, int[] frac1, int[] frac2) {
+    	if((frac1[2] == 1 && frac1[1] == 0) && (frac2[2]==1 && frac2[1] == 0)) { //if user input are both whole numbers
+			answer[0] = frac1[0] * frac2[0];
+    	} else if ((frac1[2] == 1 && frac1[1] == 0) && frac2[1]!= 0) { //if only first fraction is a whole number 
+    		answer[1] = frac1[0] * frac2[1]; 
+    		answer[2] = frac2[2];
+    	} else if ((frac2[2] == 1 && frac2[1] == 0) && frac1[1]!=0) { //if only second fraction is a whole number 
+    		answer[1] = frac2[0] * frac1[1]; 
+    		answer[2] = frac1[2];
+		} else {
+			answer[1] = frac1[1] * frac2[1];
+			answer[2] = frac1[2] * frac2[2];
+		}
+    }
+    public static void divide(int[] answer, int[] frac1, int[] frac2) {
+    	if((frac1[2] == 1 && frac1[1] == 0) && (frac2[2]==1 && frac2[1] == 0)) { //if fractions are both whole numbers
+			answer[1] = frac1[0];
+			answer[2] = frac2[0];
+    	} else if ((frac1[2] == 1 && frac1[1] == 0) && frac2[1]!= 0) { //if only first fraction is a whole number 
+    		answer[1] = frac2[1]; 
+    		answer[2] = frac2[2] * frac1[0];
+    	} else if ((frac2[2] == 1 && frac2[1] == 0) && frac1[1]!=0) { //if only second fraction is a whole number 
+    		answer[1] = frac1[1]; 
+    		answer[2] = frac1[2] * frac2[0];
+		} else {
+			answer[1] = frac1[1] * frac2[2];
+			answer[2] = frac1[2] * frac2[1];
+		}
+    }    
     /**
      * greatestCommonDivisor - Find the largest integer that evenly divides two integers.
      *      Use this helper method in the Final Checkpoint to reduce fractions.
