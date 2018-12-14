@@ -6,12 +6,13 @@ public class FracCalc {
      * @param args - unused
      */
     public static void main(String[] args) {
-    	Scanner userInput = new Scanner(System.in);
+    	//System.out.println(greatestCommonDivisor(64, 24));
+    	Scanner userInput = new Scanner(System.in); //accepts user input
     	String nextInput = ""; 
     	while(!nextInput.equals("quit")) { //Reads user input and calculates until reader types "quit"
     		nextInput = userInput.nextLine(); //reads readers next input
     		if(!nextInput.equals("quit")) { //calculate if the user input was not "quit"
-    			System.out.println(produceAnswer(nextInput)); //passes input to produceAnswer method and prints answer calculated by produceAnswer method
+    			System.out.println(produceAnswer(nextInput)); //prints answer calculated by produceAnswer method if it's a whole number
     		}
     	}
     }
@@ -22,14 +23,6 @@ public class FracCalc {
      * @return the result of the fraction after it has been calculated.
      *      Example: return ==> "1_1/4"
      */
-    // Checkpoint 1: Return the second operand. Example "4/5 * 1_2/4" returns "1_2/4".
-    // Checkpoint 2: Return the second operand as a string representing each part.
-    //               Example "4/5 * 1_2/4" returns "whole:1 numerator:2 denominator:4".
-    // Checkpoint 3: Evaluate the formula and return the result as a fraction.
-    //               Example "4/5 * 1_2/4" returns "6/5".
-    //               Note: Answer does not need to be reduced, but it must be correct.
-    // Final project: All answers must be reduced.
-    //               Example "4/5 * 1_2/4" returns "1_1/5".
     public static String produceAnswer(String input) { //calculates the fraction expression user enters
     	String firstFrac = input.substring(0, input.indexOf(" ")); //finds first fraction which ends before the first space 	
     	String cutInput = input.substring(input.indexOf(" ")+1); //forms a new String without the firstOperand     	
@@ -37,13 +30,21 @@ public class FracCalc {
     	String secondFrac = cutInput.substring(2); //finds second fraction which starts after the operator and space
     	//Two arrays to store the whole number (index 0), numerator (index 1), and denominator (index 2) of the fractions 
     	if ((firstFrac.equals("0") || secondFrac.equals("0")) && (operator.equals("*") || operator.equals("/"))) {
-    		return "0";
+    		return "0"; //returns 0 if dividing or multiplying 0
     	}
-    	int[] parse1stFrac = new int[3];
+    	int[] parse1stFrac = new int[3]; //2 arrays to store the whole, numerator, and denominator of the fraction inputs at indexes
     	int[] parse2ndFrac = new int[3];
+    	int[] answer = new int[3]; //Array to store the final answer
     	parseFrac(firstFrac, parse1stFrac);
     	parseFrac(secondFrac, parse2ndFrac);
-        return calculate(parse1stFrac, parse2ndFrac, operator);
+        calculate(answer, parse1stFrac, parse2ndFrac, operator);
+        if(returnStringAnswer(answer).contains("/")) { //if the answer String is not a whole number
+        	reduceAnswer(answer); //reduces fraction
+        	if(Math.abs(answer[1]) > Math.abs(answer[2])) { //if numerator is bigger than denominator
+        		mixedFrac(answer); //converts it into mixed fraction
+        	}
+        } 
+        return returnStringAnswer(answer);
     }    
     /**
      * parseFrac - parses fraction into 3 integer values and stores into array
@@ -76,10 +77,12 @@ public class FracCalc {
      * @return - a String of the fraction answer
      */
     public static String returnStringAnswer(int[] answer) { 
-    	if(answer[0] !=0) {
+    	if(answer[0] !=0 && answer[1] == 0) { //whole number
     		return "" + answer[0];  
-    	} else {
+    	} else if (answer[0] ==0) { //no whole number
     		return answer[1] + "/" + answer[2];
+    	} else { //mixed number
+    		return answer[0] + "_" + answer[1] + "/" + answer[2];
     	}
     }
     /** 
@@ -102,18 +105,17 @@ public class FracCalc {
      * @param operator - plus, minus, multiply, or divide
      * @return a String of the fraction answer
      */
-    public static String calculate(int[] frac1, int[] frac2, String operator) {
-    	int[] answer = new int[3]; //New array to store the final answer
-		if(operator.equals("+")) { 
+    public static void calculate(int[] answer, int[] frac1, int[] frac2, String operator) {
+		if(operator.equals("+")) { //plus
 			plus(answer, frac1, frac2);
-    	} else if (operator.equals("-")) { 
+    	} else if (operator.equals("-")) { //minus
     		minus(answer, frac1, frac2);
-    	} else if (operator.equals("*")) { 
+    	} else if (operator.equals("*")) { //multiply
     		multiply(answer, frac1, frac2);
-    	} else { //Divide
+    	} else { //divide
     		divide(answer, frac1, frac2);
     	}
-		return returnStringAnswer(answer);
+		System.out.println("improper frac answer : " + returnStringAnswer(answer)); //to check where code went wrong
     }
     public static void plus(int[] answer, int[] frac1, int[] frac2) { 
     	if((frac1[2] == 1 && frac1[1] == 0) && (frac2[2]==1 && frac2[1] == 0)) { //if fractions are both whole numbers
@@ -170,6 +172,34 @@ public class FracCalc {
 			answer[2] = frac1[2] * frac2[1];
 		}
     }    
+    /**
+     * reduceAnswer - reduces improper fraction to lowest terms 
+     * @param answer array
+     */
+    public static void reduceAnswer(int[] answer) {
+    	int divisor = greatestCommonDivisor(answer[1], answer[2]); 
+    	answer[1] /= divisor; //reduces numerator and denominator by common divisor
+    	answer[2] /= divisor;
+    }
+    /**
+     * mixedFrac - converts improper fractions into whole number and simplified fraction 
+     * @param answer array
+     */
+    public static void mixedFrac(int[] answer) {
+    	int wholeNum = answer[1] / answer[2];
+    	int numerator = answer[1] % answer[2]; 
+    	System.out.println("whole num " + wholeNum);
+    	System.out.println("num " + numerator);
+    	if(numerator < 0 || answer[2] < 0) { //whole number becomes negative if any number is negative
+    		answer[0] = Math.abs(wholeNum) * -1;
+    	} else if (numerator < 0 && answer[2] < 0){ //positive whole number if both numerator and denominator have negative signs
+    		answer[0] = Math.abs(wholeNum);
+    	} else {
+    		answer[0] = wholeNum;
+    	}    		
+    	answer[2] = Math.abs(answer[2]); //numerators and denominators are never be negative
+    	answer[1] = Math.abs(numerator);
+    }
     /**
      * greatestCommonDivisor - Find the largest integer that evenly divides two integers.
      *      Use this helper method in the Final Checkpoint to reduce fractions.
